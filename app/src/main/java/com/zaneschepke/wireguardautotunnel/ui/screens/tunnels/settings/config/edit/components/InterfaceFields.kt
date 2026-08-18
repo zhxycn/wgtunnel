@@ -14,7 +14,11 @@ import com.zaneschepke.wireguardautotunnel.ui.state.EditableInterface
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InterfaceFields(uiState: ConfigUiState, onInterfaceChange: (EditableInterface) -> Unit) {
+fun InterfaceFields(
+    uiState: ConfigUiState,
+    onInterfaceChange: (EditableInterface) -> Unit,
+    onAutoAddressPrefixesChange: (String) -> Unit,
+) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() })
     val keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
@@ -27,6 +31,8 @@ fun InterfaceFields(uiState: ConfigUiState, onInterfaceChange: (EditableInterfac
                 showPrivateKey = uiState.ui.showSensitiveData,
                 keyboardOptions = keyboardOptions,
                 keyboardActions = keyboardActions,
+                autoAddressPrefixes = uiState.draft.autoAddressPrefixes,
+                onAutoAddressPrefixesChange = onAutoAddressPrefixesChange,
             )
         }
 

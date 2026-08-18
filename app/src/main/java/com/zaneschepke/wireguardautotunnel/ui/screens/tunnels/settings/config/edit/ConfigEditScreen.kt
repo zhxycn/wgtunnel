@@ -159,6 +159,7 @@ fun ConfigEditScreen(
             onToggleAmneziaValues = viewModel::toggleShowAmneziaValues,
             onToggleDropdown = viewModel::setInterfaceDropdownExpanded,
             onToggleAmneziaCompat = viewModel::toggleAmneziaCompat,
+            onAutoAddressPrefixesChange = viewModel::setAutoAddressPrefixes,
         )
         if (!uiState.isGlobalConfig)
             PeersSection(

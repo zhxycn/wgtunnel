@@ -184,6 +184,23 @@ class TunnelEventDispatcher(
                         )
                     }
 
+                    is TunnelErrorEvent.InvalidAutoAddressPrefix -> {
+                        val message = context.getString(R.string.auto_address_prefix_invalid)
+
+                        showOrNotify(
+                            scope = scope,
+                            foregroundAction = {
+                                globalEffectRepository.post(
+                                    Snackbar(
+                                        message = DynamicString(message),
+                                        type = ToastType.Error,
+                                    )
+                                )
+                            },
+                            backgroundAction = { notificationManager.showError(message) },
+                        )
+                    }
+
                     is TunnelErrorEvent.Socks5PortUnavailable -> {
                         val name = getTunnelName(error.tunnelId)
                         val message =

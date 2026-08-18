@@ -34,6 +34,8 @@ fun BasicInterfaceFields(
     showPrivateKey: Boolean,
     keyboardOptions: KeyboardOptions,
     keyboardActions: KeyboardActions,
+    autoAddressPrefixes: String,
+    onAutoAddressPrefixesChange: (String) -> Unit,
 ) {
     val locale = Locale.current.platformLocale
     val clipboardManager = rememberClipboardHelper()
@@ -106,6 +108,11 @@ fun BasicInterfaceFields(
                 stringResource(R.string.hint_template, stringResource(R.string.comma_separated))
                     .lowercase(locale),
             modifier = Modifier.fillMaxWidth(),
+        )
+
+        AddressAllocationSection(
+            prefixes = autoAddressPrefixes,
+            onPrefixesChange = onAutoAddressPrefixesChange,
         )
 
         ConfigurationTextBox(

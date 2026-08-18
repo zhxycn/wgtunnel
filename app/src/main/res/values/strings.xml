@@ -34,6 +34,8 @@
     <string name="config_changes_saved">Configuration changes saved.</string>
     <string name="public_key">Public key</string>
     <string name="addresses">Addresses</string>
+    <string name="address_prefixes">Address prefixes</string>
+    <string name="auto_address_prefix_invalid">Enter a valid IPv4 or IPv6 prefix with available host addresses.</string>
     <string name="dns_servers">DNS servers</string>
     <string name="mtu" translatable="false">MTU</string>
     <string name="peer">Peer</string>

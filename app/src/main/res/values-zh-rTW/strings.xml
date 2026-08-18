@@ -20,6 +20,8 @@
     <string name="config_changes_saved">組態變更已儲存。</string>
     <string name="public_key">公鑰</string>
     <string name="addresses">位址</string>
+    <string name="address_prefixes">位址前綴</string>
+    <string name="auto_address_prefix_invalid">請輸入包含可用主機位址的有效 IPv4 或 IPv6 前綴。</string>
     <string name="dns_servers">DNS 伺服器</string>
     <string name="peer">端點</string>
     <string name="allowed_ips">允許的 IP</string>

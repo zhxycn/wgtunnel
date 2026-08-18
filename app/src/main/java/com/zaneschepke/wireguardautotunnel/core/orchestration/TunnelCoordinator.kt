@@ -20,6 +20,7 @@ import com.zaneschepke.wireguardautotunnel.domain.repository.MonitoringSettingsR
 import com.zaneschepke.wireguardautotunnel.domain.repository.ProxySettingsRepository
 import com.zaneschepke.wireguardautotunnel.domain.repository.TunnelRepository
 import com.zaneschepke.wireguardautotunnel.service.ServiceManager
+import com.zaneschepke.wireguardautotunnel.util.PrefixAddressAllocator
 import com.zaneschepke.wireguardautotunnel.util.extensions.toTunnelDnsConfigOrNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -156,11 +157,28 @@ class TunnelCoordinator(
                 settings.isGlobalAmneziaEnabled,
             )
 
-        val runConfig =
+        var runConfig =
             if (policy.hasAnyOverrides) {
                 val globalConfig = tunnelRepository.globalTunnelFlow.firstOrNull()?.getConfig()
                 ConfigReconciler.reconcileConfig(config, globalConfig, policy)
             } else config
+
+        val address =
+            try {
+                PrefixAddressAllocator.apply(
+                    addresses = runConfig.`interface`.address,
+                    prefixes = tunnelConfig.autoAddressPrefixes,
+                )
+            } catch (error: IllegalArgumentException) {
+                Timber.w(
+                    error,
+                    "Unable to allocate an address from a configured prefix for tunnel ${tunnelConfig.id}",
+                )
+                _errors.emit(TunnelErrorEvent.InvalidAutoAddressPrefix(tunnelConfig.id))
+                return
+            }
+
+        runConfig = runConfig.copy(`interface` = runConfig.`interface`.copy(address = address))
 
         val tunnelDnsConfig = dnsSettings.toTunnelDnsConfigOrNull(runConfig)
 

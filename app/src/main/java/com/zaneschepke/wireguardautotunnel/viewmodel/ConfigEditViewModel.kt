@@ -19,6 +19,7 @@ import com.zaneschepke.wireguardautotunnel.ui.state.EditableConfig
 import com.zaneschepke.wireguardautotunnel.ui.state.EditableInterface
 import com.zaneschepke.wireguardautotunnel.ui.state.EditablePeer
 import com.zaneschepke.wireguardautotunnel.ui.state.GlobalSettingsState
+import com.zaneschepke.wireguardautotunnel.util.PrefixAddressAllocator
 import com.zaneschepke.wireguardautotunnel.util.StringValue
 import com.zaneschepke.wireguardautotunnel.util.extensions.asStringValue
 import kotlinx.coroutines.flow.combine
@@ -81,7 +82,12 @@ class ConfigEditViewModel(
                                             showAmneziaValues =
                                                 config.`interface`.isAmneziaEnabled(),
                                         ),
-                                    draft = ConfigDraft(tunnelName = tunnel.name, config = config),
+                                    draft =
+                                        ConfigDraft(
+                                            tunnelName = tunnel.name,
+                                            config = config,
+                                            autoAddressPrefixes = tunnel.autoAddressPrefixes,
+                                        ),
                                 )
                             }
 
@@ -129,14 +135,17 @@ class ConfigEditViewModel(
             val config = state.draft.config.buildConfig(state.draft.tunnelName)
 
             config.validate()
+            PrefixAddressAllocator.validate(state.draft.autoAddressPrefixes)
 
             val tunnelConfig =
                 if (tunnelId == null) {
                     TunnelConfig.fromConfig(config, state.draft.tunnelName)
+                        .copy(autoAddressPrefixes = state.draft.autoAddressPrefixes)
                 } else {
                     state.tunnel?.copy(
                         name = state.draft.tunnelName,
                         quickConfig = config.asQuickString(),
+                        autoAddressPrefixes = state.draft.autoAddressPrefixes,
                     )
                 }
 
@@ -168,6 +177,8 @@ class ConfigEditViewModel(
                 val message =
                     when (it) {
                         is ConfigParseException -> it.asStringValue()
+                        is IllegalArgumentException ->
+                            StringValue.StringResource(R.string.auto_address_prefix_invalid)
                         else -> StringValue.StringResource(R.string.unknown_error)
                     }
 
@@ -261,6 +272,10 @@ class ConfigEditViewModel(
         }
     }
 
+    fun setAutoAddressPrefixes(prefixes: String) = intent {
+        reduce { state.copy(draft = state.draft.copy(autoAddressPrefixes = prefixes)) }
+    }
+
     fun applyCopySource() = intent {
         val id = state.ui.selectedCopySourceTunnelId ?: return@intent
 
@@ -268,7 +283,11 @@ class ConfigEditViewModel(
 
         reduce {
             state.copy(
-                draft = state.draft.copy(config = EditableConfig.from(tunnel.getConfig())),
+                draft =
+                    state.draft.copy(
+                        config = EditableConfig.from(tunnel.getConfig()),
+                        autoAddressPrefixes = tunnel.autoAddressPrefixes,
+                    ),
                 ui = state.ui.copy(selectedCopySourceTunnelId = null),
             )
         }

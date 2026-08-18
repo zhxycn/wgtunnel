@@ -20,6 +20,8 @@
     <string name="config_changes_saved">配置更改已保存。</string>
     <string name="public_key">公钥</string>
     <string name="addresses">地址</string>
+    <string name="address_prefixes">地址前缀</string>
+    <string name="auto_address_prefix_invalid">请输入包含可用主机地址的有效 IPv4 或 IPv6 前缀。</string>
     <string name="dns_servers">DNS 服务器</string>
     <string name="peer">节点</string>
     <string name="allowed_ips">允许的 IP</string>

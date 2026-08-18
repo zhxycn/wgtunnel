@@ -24,6 +24,7 @@ data class TunnelConfig(
     val ipv6RestoreEnabled: Boolean = false,
     val tunnelBSSIDs: List<String> = emptyList(),
     val isDDNSTunnel: Boolean = false,
+    val autoAddressPrefixes: String = "",
 ) {
 
     fun toSummary() = TunnelSummary(id = id, name = name)

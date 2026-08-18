@@ -71,11 +71,19 @@ fun ConfigScreen(
                 }
             }
         }
+    val exportConfig =
+        remember(tunnel.quickConfig, tunnel.autoAddressPrefixes) {
+            tunnel.quickConfig.withPrefixAddress(tunnel.autoAddressPrefixes)
+        }
+    val displayConfig by
+        remember(rawConfig, exportConfig, liveConfig) {
+            derivedStateOf { if (liveConfig) rawConfig else exportConfig }
+        }
 
     sharedViewModel.collectSideEffect { sideEffect ->
         when (sideEffect) {
             is LocalSideEffect.Modal.QR -> {
-                if (tunnel.quickConfig.isTextTooLargeForQr()) {
+                if (exportConfig.isTextTooLargeForQr()) {
                     sharedViewModel.postSideEffect(
                         GlobalSideEffect.Snackbar(
                             StringValue.StringResource(R.string.text_too_large_for_qr),
@@ -87,13 +95,16 @@ fun ConfigScreen(
                 }
             }
             is LocalSideEffect.ShowSensitive -> showKeys = !showKeys
-            is LocalSideEffect.CopyToClipboard -> clipboard.copy(rawConfig)
+            is LocalSideEffect.CopyToClipboard -> clipboard.copy(exportConfig)
             else -> Unit
         }
     }
 
     if (showQrModal) {
-        QrCodeDialog(tunnelConfig = tunnel, onDismiss = { showQrModal = false })
+        QrCodeDialog(
+            tunnelConfig = tunnel.copy(quickConfig = exportConfig),
+            onDismiss = { showQrModal = false },
+        )
     }
 
     Column(
@@ -108,7 +119,9 @@ fun ConfigScreen(
                 ),
     ) {
         val displayText by
-            remember(rawConfig, showKeys) { derivedStateOf { maskSensitive(rawConfig, showKeys) } }
+            remember(displayConfig, showKeys) {
+                derivedStateOf { maskSensitive(displayConfig, showKeys) }
+            }
         val annotated by
             remember(displayText) { derivedStateOf { buildConfigAnnotatedString(displayText) } }
 
@@ -121,6 +134,27 @@ fun ConfigScreen(
             )
         }
     }
+}
+
+private fun String.withPrefixAddress(prefixes: String): String {
+    if (prefixes.isBlank()) return this
+
+    val lines = lines().toMutableList()
+    val interfaceIndex = lines.indexOfFirst { it.trim().equals("[Interface]", ignoreCase = true) }
+    if (interfaceIndex == -1) return this
+
+    val peerIndex =
+        lines.indexOfFirst { it.trim().equals("[Peer]", ignoreCase = true) }.takeIf { it != -1 }
+            ?: lines.size
+    val addressIndex =
+        lines.subList(interfaceIndex + 1, peerIndex).indexOfLast {
+            it.trimStart().startsWith("Address", ignoreCase = true)
+        }
+    val insertionIndex =
+        if (addressIndex == -1) interfaceIndex + 1 else interfaceIndex + addressIndex + 2
+
+    lines.add(insertionIndex, "Address = ${prefixes.trim()}")
+    return lines.joinToString("\n")
 }
 
 fun buildConfigAnnotatedString(text: String): AnnotatedString {

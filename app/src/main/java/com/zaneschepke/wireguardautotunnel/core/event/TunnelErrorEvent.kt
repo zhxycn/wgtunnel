@@ -7,6 +7,8 @@ sealed interface TunnelErrorEvent {
 
     data class InternalFailure(val tunnelId: Int, val message: String) : TunnelErrorEvent
 
+    data class InvalidAutoAddressPrefix(val tunnelId: Int) : TunnelErrorEvent
+
     data class Socks5PortUnavailable(val tunnelId: Int, val port: Int) : TunnelErrorEvent
 
     data class HttpPortUnavailable(val tunnelId: Int, val port: Int) : TunnelErrorEvent

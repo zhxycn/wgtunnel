@@ -44,6 +44,7 @@ data class ConfigUiState(
                 ConfigDraft(
                     tunnelName = original.name,
                     config = EditableConfig.from(original.getConfig()),
+                    autoAddressPrefixes = original.autoAddressPrefixes,
                 )
         }
 }
@@ -60,6 +61,10 @@ data class ConfigEditUiState(
 
 data class GlobalSettingsState(val dnsEnabled: Boolean = false, val amneziaEnabled: Boolean = false)
 
-data class ConfigDraft(val tunnelName: String = "", val config: EditableConfig = EditableConfig())
+data class ConfigDraft(
+    val tunnelName: String = "",
+    val config: EditableConfig = EditableConfig(),
+    val autoAddressPrefixes: String = "",
+)
 
 data class TunnelSummary(val id: Int, val name: String)

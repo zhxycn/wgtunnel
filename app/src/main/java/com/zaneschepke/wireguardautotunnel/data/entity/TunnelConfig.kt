@@ -27,6 +27,8 @@ data class TunnelConfig(
     @ColumnInfo(name = "tunnel_bssids", defaultValue = "[]")
     val tunnelBSSIDs: List<String> = emptyList(),
     @ColumnInfo(name = "is_ddns_tunnel", defaultValue = "0") val isDDNSTunnel: Boolean = false,
+    @ColumnInfo(name = "auto_address_prefixes", defaultValue = "''")
+    val autoAddressPrefixes: String = "",
 ) {
     companion object {
         const val GLOBAL_CONFIG_NAME = "4675ab06-903a-438b-8485-6ea4187a9512"

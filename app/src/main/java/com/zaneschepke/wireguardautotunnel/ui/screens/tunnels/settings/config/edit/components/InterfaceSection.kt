@@ -39,6 +39,7 @@ fun InterfaceSection(
     onToggleAmneziaValues: () -> Unit,
     onToggleAmneziaCompat: () -> Unit,
     onToggleDropdown: (Boolean) -> Unit,
+    onAutoAddressPrefixesChange: (String) -> Unit,
 ) {
     val isTv = LocalIsAndroidTV.current
 
@@ -118,7 +119,11 @@ fun InterfaceSection(
                                 .lowercase(locale = Locale.current.platformLocale),
                         modifier = Modifier.fillMaxWidth(),
                     )
-                InterfaceFields(uiState = uiState, onInterfaceChange = onInterfaceChange)
+                InterfaceFields(
+                    uiState = uiState,
+                    onInterfaceChange = onInterfaceChange,
+                    onAutoAddressPrefixesChange = onAutoAddressPrefixesChange,
+                )
             }
         }
     }
