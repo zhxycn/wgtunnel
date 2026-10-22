@@ -28,7 +28,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -49,13 +51,17 @@ import com.zaneschepke.networkmonitor.AndroidNetworkMonitor
 import com.zaneschepke.wireguardautotunnel.R
 import com.zaneschepke.wireguardautotunnel.ui.LocalIsAndroidTV
 import com.zaneschepke.wireguardautotunnel.ui.LocalNavController
+import com.zaneschepke.wireguardautotunnel.ui.common.banner.InfoNotice
 import com.zaneschepke.wireguardautotunnel.ui.common.button.SurfaceRow
 import com.zaneschepke.wireguardautotunnel.ui.common.button.SwitchWithDivider
 import com.zaneschepke.wireguardautotunnel.ui.common.button.ThemedSwitch
+import com.zaneschepke.wireguardautotunnel.ui.common.dialog.InfoDialog
 import com.zaneschepke.wireguardautotunnel.ui.common.label.GroupLabel
 import com.zaneschepke.wireguardautotunnel.ui.common.text.DescriptionText
 import com.zaneschepke.wireguardautotunnel.ui.navigation.Route
 import com.zaneschepke.wireguardautotunnel.ui.navigation.TunnelNetwork
+import com.zaneschepke.wireguardautotunnel.util.extensions.launchAppSettings
+import com.zaneschepke.wireguardautotunnel.util.extensions.launchLocationServicesSettings
 import com.zaneschepke.wireguardautotunnel.viewmodel.AutoTunnelViewModel
 import com.zaneschepke.wireguardautotunnel.viewmodel.SharedAppViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -76,6 +82,26 @@ fun AutoTunnelScreen(
     val uiState by viewModel.collectAsState()
 
     if (uiState.isLoading) return
+
+    var showLocationDialog by remember { mutableStateOf(false) }
+    val needsLocation = uiState.autoTunnelSettings.wifiDetectionMethod.needsLocationPermissions()
+    val showServicesWarning =
+        needsLocation && uiState.connectivityState?.locationServicesEnabled == false
+    val showPermissionsWarning =
+        needsLocation && uiState.connectivityState?.locationPermissionsGranted == false
+
+    if (showLocationDialog) {
+        InfoDialog(
+            onAttest = {
+                context.launchAppSettings()
+                showLocationDialog = false
+            },
+            onDismiss = { showLocationDialog = false },
+            title = stringResource(R.string.location_permissions),
+            body = { Text(stringResource(R.string.location_justification)) },
+            confirmText = stringResource(R.string.open_settings),
+        )
+    }
 
     val focusRequester = remember { FocusRequester() }
 
@@ -114,6 +140,20 @@ fun AutoTunnelScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top),
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
     ) {
+        Column {
+            InfoNotice(
+                title = stringResource(R.string.location_services_not_detected),
+                actionLabel = stringResource(R.string.fix),
+                onClick = { context.launchLocationServicesSettings() },
+                visible = showServicesWarning,
+            )
+            InfoNotice(
+                title = stringResource(R.string.location_permissions_missing),
+                actionLabel = stringResource(R.string.fix),
+                onClick = { showLocationDialog = true },
+                visible = showPermissionsWarning,
+            )
+        }
         Column {
             val (title, buttonText, icon) =
                 remember(uiState.autoTunnelActive) {

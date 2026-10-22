@@ -24,6 +24,8 @@ data class TunnelConfig(
     val ipv6RestoreEnabled: Boolean = false,
     val tunnelBSSIDs: List<String> = emptyList(),
     val isDDNSTunnel: Boolean = false,
+    val groupId: Int? = null,
+    val entryTunnelId: Int? = null,
     val autoAddressPrefixes: String = "",
 ) {
 
@@ -79,6 +81,7 @@ data class TunnelConfig(
                         dynamicDnsRecovery = config.isDDNSTunnel,
                         ipv4Fallback = config.isIpv6Preferred,
                         ipv6Recovery = config.ipv6RestoreEnabled,
+                        bounceDelaySeconds = generalSettings.seamlessRecoveryBounceDelaySec,
                     )
                 )
             }

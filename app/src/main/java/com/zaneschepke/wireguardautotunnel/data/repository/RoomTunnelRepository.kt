@@ -42,6 +42,10 @@ class RoomTunnelRepository(private val tunnelConfigDao: TunnelConfigDao) : Tunne
         tunnelConfigDao.saveAll(tunnelConfigList.map { tunnelConfig -> tunnelConfig.toEntity() })
     }
 
+    override suspend fun updateAll(tunnelConfigList: List<Domain>) {
+        tunnelConfigDao.updateAll(tunnelConfigList.map { tunnelConfig -> tunnelConfig.toEntity() })
+    }
+
     override suspend fun updatePrimaryTunnel(tunnelConfig: Domain?) {
         tunnelConfigDao.resetPrimaryTunnel()
         tunnelConfig?.let { save(it.copy(isPrimaryTunnel = true)) }
@@ -58,6 +62,7 @@ class RoomTunnelRepository(private val tunnelConfigDao: TunnelConfigDao) : Tunne
     }
 
     override suspend fun delete(tunnelConfig: Domain) {
+        tunnelConfigDao.clearEntryRefsTo(tunnelConfig.id)
         tunnelConfigDao.delete(tunnelConfig.toEntity())
     }
 
@@ -90,6 +95,7 @@ class RoomTunnelRepository(private val tunnelConfigDao: TunnelConfigDao) : Tunne
     }
 
     override suspend fun delete(tunnels: List<Domain>) {
+        tunnelConfigDao.clearEntryRefsTo(tunnels.map { it.id })
         tunnelConfigDao.delete(tunnels.map { it.toEntity() })
     }
 

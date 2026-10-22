@@ -19,6 +19,8 @@ fun Entity.toDomain(): Domain =
         ipv6RestoreEnabled = ipv6RestoreEnabled,
         tunnelBSSIDs = tunnelBSSIDs,
         isDDNSTunnel = isDDNSTunnel,
+        groupId = groupId,
+        entryTunnelId = entryTunnelId,
         autoAddressPrefixes = autoAddressPrefixes,
     )
 
@@ -38,5 +40,7 @@ fun Domain.toEntity(): Entity =
         ipv6RestoreEnabled = ipv6RestoreEnabled,
         tunnelBSSIDs = tunnelBSSIDs,
         isDDNSTunnel = isDDNSTunnel,
+        groupId = groupId,
+        entryTunnelId = entryTunnelId,
         autoAddressPrefixes = autoAddressPrefixes,
     )

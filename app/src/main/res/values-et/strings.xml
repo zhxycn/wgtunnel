@@ -15,8 +15,6 @@
     <string name="add_tunnels_text">Lisa conf- või zip-failist</string>
     <string name="add_from_qr">Lisa QR-koodist</string>
     <string name="tunnel_name">Tunneli nimi</string>
-    <string name="exclude">Välista</string>
-    <string name="include">Kaasa</string>
     <string name="config_changes_saved">Seadistuse muudatused on salvestatud.</string>
     <string name="public_key">Avalik võti</string>
     <string name="addresses">Aadressid</string>
@@ -56,7 +54,6 @@
     <string name="delete_tunnel">Kustuta tunnel</string>
     <string name="delete_tunnel_message">Kindel, et valitud tunnelid kustutada?</string>
     <string name="yes">Jah</string>
-    <string name="all">Kõik</string>
     <string name="no_email_detected">E-posti rakendust ei õnnestu tuvastada</string>
     <string name="no_browser_detected">Veebibrauserit ei õnnestu tuvastada</string>
     <string name="open_issue">Alusta vearaporti koostamist</string>
@@ -149,7 +146,6 @@
     <string name="camera_permission_required">Vajalik on õigus kasutada kaamerat</string>
     <string name="export_failed">Eksportimine ei õnnestunud</string>
     <string name="version_template">Versioon: %1$s</string>
-    <string name="current_template">Praegune: %1$s</string>
     <string name="flavor_template">Levitusviis: %1$s</string>
     <string name="root_required_template">%1$s (vajalikud on juurkasutaja õigused)</string>
     <string name="recommended_template">%1$s (soovitatav)</string>
@@ -304,4 +300,8 @@
     <!-- Notification formatting -->
     <!-- Informational notifications -->
     <!-- Errors -->
+    <string name="live_updates">Reaalajas värskendused</string>
+    <string name="live_updates_desc">Näitab aktiivse tunneli ühenduse edenemist ja olekut olekuribal ning lukustuskuval. Kehtib, kui töötab ainult üks tunnel</string>
+    <string name="notification_connection_manual">Käsitsi ühendus</string>
+    <string name="notification_connection_auto">Automaatne tunneldus</string>
 </resources>

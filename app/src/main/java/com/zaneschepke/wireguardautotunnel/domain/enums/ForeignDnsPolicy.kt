@@ -11,9 +11,16 @@ enum class ForeignDnsPolicy(val value: Int) {
 
     fun asString(context: Context): String =
         when (this) {
-            Redirect -> context.getString(R.string.foreign_dns_redirect)
-            Block -> context.getString(R.string.foreign_dns_block)
-            Allow -> context.getString(R.string.foreign_dns_allow)
+            Redirect -> context.getString(R.string.transit_dns_redirect)
+            Block -> context.getString(R.string.transit_dns_block)
+            Allow -> context.getString(R.string.transit_dns_allow)
+        }
+
+    fun asDescription(context: Context): String =
+        when (this) {
+            Redirect -> context.getString(R.string.transit_dns_redirect_desc)
+            Block -> context.getString(R.string.transit_dns_block_desc)
+            Allow -> context.getString(R.string.transit_dns_allow_desc)
         }
 
     fun toCore(): CoreForeignDnsPolicy =

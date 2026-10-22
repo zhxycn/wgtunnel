@@ -15,8 +15,6 @@
     <string name="add_tunnels_text">فائل یا زپ سے شامل کریں</string>
     <string name="add_from_qr">کیو آر کوڈ سے شامل کریں</string>
     <string name="tunnel_name">ٹنل کا نام</string>
-    <string name="exclude">خارج</string>
-    <string name="include">شامل</string>
     <string name="config_changes_saved">کنفیگریشن تبدیلیاں محفوظ ہو گئیں۔</string>
     <string name="public_key">عوامی کلید</string>
     <string name="addresses">پتے</string>
@@ -56,7 +54,6 @@
     <string name="delete_tunnel">ٹنل حذف کریں</string>
     <string name="delete_tunnel_message">کیا آپ واقعی منتخب ٹنل کو حذف کرنا چاہیں گے؟</string>
     <string name="yes">ہاں</string>
-    <string name="all">تمام</string>
     <string name="no_email_detected">کوئی ای میل ایپ نہیں ملی</string>
     <string name="no_browser_detected">کوئی براؤزر نہیں ملا</string>
     <string name="open_issue">ایک مسئلہ کھولیں</string>
@@ -149,7 +146,6 @@
     <string name="camera_permission_required">کیمرے کی اجازت درکار ہے</string>
     <string name="export_failed">برآمد ناکام</string>
     <string name="version_template">ورژن: %1$s</string>
-    <string name="current_template">موجودہ: %1$s</string>
     <string name="flavor_template">ذائقہ: %1$s</string>
     <string name="root_required_template">%1$s (روٹ کی ضرورت ہے)</string>
     <string name="recommended_template">%1$s (تجویز کردہ)</string>
@@ -256,4 +252,8 @@
     <!-- Notification formatting -->
     <!-- Informational notifications -->
     <!-- Errors -->
+    <string name="live_updates">براہ راست اپ ڈیٹس</string>
+    <string name="live_updates_desc">فعال ٹنل کی کنکشن کی پیش رفت اور حیثیت اسٹیٹس بار اور لاک اسکرین پر دکھاتا ہے۔ صرف اس وقت لاگو ہوتا ہے جب ایک ٹنل چل رہا ہو</string>
+    <string name="notification_connection_manual">دستی کنکشن</string>
+    <string name="notification_connection_auto">خودکار ٹنل</string>
 </resources>

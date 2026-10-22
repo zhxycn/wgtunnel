@@ -1,6 +1,5 @@
 package com.zaneschepke.wireguardautotunnel
 
-import ProxySettingsScreen
 import android.Manifest
 import android.content.Intent
 import android.graphics.Color
@@ -33,6 +32,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Celebration
 import androidx.compose.material.icons.outlined.CheckCircleOutline
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -58,10 +58,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.Locale
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -75,20 +77,25 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.dokar.sonner.TextToastAction
 import com.dokar.sonner.Toast
+import com.dokar.sonner.ToastCloseButton
 import com.dokar.sonner.ToastType
 import com.dokar.sonner.Toaster
 import com.dokar.sonner.rememberToasterState
 import com.zaneschepke.networkmonitor.NetworkMonitor
 import com.zaneschepke.wireguardautotunnel.core.orchestration.FileExportCoordinator
-import com.zaneschepke.wireguardautotunnel.data.AppDatabase
+import com.zaneschepke.wireguardautotunnel.data.backup.BackupWriteResult
+import com.zaneschepke.wireguardautotunnel.data.backup.DatabaseBackup
+import com.zaneschepke.wireguardautotunnel.data.backup.RestoreResult
 import com.zaneschepke.wireguardautotunnel.domain.enums.TunnelMode
 import com.zaneschepke.wireguardautotunnel.domain.model.TunnelConfig
 import com.zaneschepke.wireguardautotunnel.domain.repository.AppStateRepository
 import com.zaneschepke.wireguardautotunnel.domain.repository.TunnelRepository
 import com.zaneschepke.wireguardautotunnel.domain.sideeffect.GlobalSideEffect
+import com.zaneschepke.wireguardautotunnel.domain.sideeffect.NotificationPendingAction
 import com.zaneschepke.wireguardautotunnel.notification.NotificationService
 import com.zaneschepke.wireguardautotunnel.notification.NotificationService.Companion.EXTRA_AUTO_UPDATE
 import com.zaneschepke.wireguardautotunnel.notification.NotificationService.Companion.EXTRA_OPEN_SUPPORT
+import com.zaneschepke.wireguardautotunnel.notification.NotificationService.Companion.EXTRA_SHOW_UPDATE
 import com.zaneschepke.wireguardautotunnel.notification.NotificationService.Companion.UPDATE_AVAILABLE_NOTIFICATION_ID
 import com.zaneschepke.wireguardautotunnel.service.tile.TunnelTileRefresher
 import com.zaneschepke.wireguardautotunnel.ui.LocalIsAndroidTV
@@ -114,12 +121,15 @@ import com.zaneschepke.wireguardautotunnel.ui.screens.settings.SettingsScreen
 import com.zaneschepke.wireguardautotunnel.ui.screens.settings.appearance.AppearanceScreen
 import com.zaneschepke.wireguardautotunnel.ui.screens.settings.appearance.display.DisplayScreen
 import com.zaneschepke.wireguardautotunnel.ui.screens.settings.appearance.language.LanguageScreen
+import com.zaneschepke.wireguardautotunnel.ui.screens.settings.appearance.notifications.NotificationsScreen
 import com.zaneschepke.wireguardautotunnel.ui.screens.settings.dns.DnsSettingsScreen
 import com.zaneschepke.wireguardautotunnel.ui.screens.settings.globals.TunnelGlobalsScreen
 import com.zaneschepke.wireguardautotunnel.ui.screens.settings.integrations.AndroidIntegrationsScreen
 import com.zaneschepke.wireguardautotunnel.ui.screens.settings.lockdown.LockdownSettingsScreen
 import com.zaneschepke.wireguardautotunnel.ui.screens.settings.logs.LogsScreen
 import com.zaneschepke.wireguardautotunnel.ui.screens.settings.monitoring.MonitoringScreen
+import com.zaneschepke.wireguardautotunnel.ui.screens.settings.proxy.ProxySettingsScreen
+import com.zaneschepke.wireguardautotunnel.ui.screens.settings.recovery.TunnelRecoveryScreen
 import com.zaneschepke.wireguardautotunnel.ui.screens.settings.security.SecurityScreen
 import com.zaneschepke.wireguardautotunnel.ui.screens.support.SupportScreen
 import com.zaneschepke.wireguardautotunnel.ui.screens.support.donate.DonateScreen
@@ -129,8 +139,8 @@ import com.zaneschepke.wireguardautotunnel.ui.screens.tunnels.TunnelsScreen
 import com.zaneschepke.wireguardautotunnel.ui.screens.tunnels.settings.TunnelSettingsScreen
 import com.zaneschepke.wireguardautotunnel.ui.screens.tunnels.settings.config.ConfigScreen
 import com.zaneschepke.wireguardautotunnel.ui.screens.tunnels.settings.config.edit.ConfigEditScreen
+import com.zaneschepke.wireguardautotunnel.ui.screens.tunnels.settings.entry.EntryTunnelScreen
 import com.zaneschepke.wireguardautotunnel.ui.screens.tunnels.settings.ipv6.IPv6Screen
-import com.zaneschepke.wireguardautotunnel.ui.screens.tunnels.sort.SortScreen
 import com.zaneschepke.wireguardautotunnel.ui.screens.tunnels.splittunnel.SplitTunnelScreen
 import com.zaneschepke.wireguardautotunnel.ui.theme.AlertRed
 import com.zaneschepke.wireguardautotunnel.ui.theme.Heart
@@ -139,22 +149,16 @@ import com.zaneschepke.wireguardautotunnel.ui.theme.SilverTree
 import com.zaneschepke.wireguardautotunnel.ui.theme.Straw
 import com.zaneschepke.wireguardautotunnel.ui.theme.WireguardAutoTunnelTheme
 import com.zaneschepke.wireguardautotunnel.util.FileUtils
-import com.zaneschepke.wireguardautotunnel.util.LocaleUtil
 import com.zaneschepke.wireguardautotunnel.util.StringValue
 import com.zaneschepke.wireguardautotunnel.util.extensions.installApk
 import com.zaneschepke.wireguardautotunnel.util.extensions.isRunningOnTv
 import com.zaneschepke.wireguardautotunnel.util.extensions.openWebUrl
-import com.zaneschepke.wireguardautotunnel.util.extensions.restartApp
 import com.zaneschepke.wireguardautotunnel.util.permission.LocalNetworkPermissionHelper
 import com.zaneschepke.wireguardautotunnel.viewmodel.ConfigEditViewModel
 import com.zaneschepke.wireguardautotunnel.viewmodel.SharedAppViewModel
 import com.zaneschepke.wireguardautotunnel.viewmodel.SplitTunnelViewModel
 import com.zaneschepke.wireguardautotunnel.viewmodel.TunnelViewModel
-import de.raphaelebner.roomdatabasebackup.core.OnCompleteListener.Companion.EXIT_CODE_ERROR
-import de.raphaelebner.roomdatabasebackup.core.OnCompleteListener.Companion.EXIT_CODE_ERROR_DECRYPTION_ERROR
-import de.raphaelebner.roomdatabasebackup.core.OnCompleteListener.Companion.EXIT_CODE_ERROR_RESTORE_BACKUP_IS_ENCRYPTED
-import de.raphaelebner.roomdatabasebackup.core.OnCompleteListener.Companion.EXIT_CODE_ERROR_WRONG_DECRYPTION_PASSWORD
-import de.raphaelebner.roomdatabasebackup.core.RoomBackup
+import kotlin.system.exitProcess
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.channels.Channel
@@ -173,16 +177,41 @@ class MainActivity : AppCompatActivity() {
 
     private val appStateRepository: AppStateRepository by inject()
     private val tunnelRepository: TunnelRepository by inject()
-    private val appDatabase: AppDatabase by inject()
     private val networkMonitor: NetworkMonitor by inject()
     private val fileExportCoordinator: FileExportCoordinator by inject()
     private val notificationService: NotificationService by inject()
+    private val databaseBackup: DatabaseBackup by inject()
 
     val viewModel by viewModel<SharedAppViewModel>()
-    private lateinit var roomBackup: RoomBackup
+    private var pendingBackupPassword: String? = null
+
+    private val createBackupLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.CreateDocument(FileUtils.ZIP_FILE_MIME_TYPE)
+        ) { uri ->
+            val password = pendingBackupPassword
+            pendingBackupPassword = null
+            if (uri == null) {
+                lifecycleScope.launch { showBackupResult(BackupWriteResult.Failed) }
+                return@registerForActivityResult
+            }
+            lifecycleScope.launch { showBackupResult(databaseBackup.backupTo(uri, password)) }
+        }
+
+    private val openBackupLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            val password = pendingBackupPassword
+            pendingBackupPassword = null
+            if (uri == null) {
+                lifecycleScope.launch { showRestoreResult(RestoreResult.Failed) }
+                return@registerForActivityResult
+            }
+            lifecycleScope.launch { finishRestore(databaseBackup.restore(uri, password)) }
+        }
 
     private val snackbarChannel = Channel<GlobalSideEffect.Snackbar>(Channel.UNLIMITED)
     private val supportDeepLinkChannel = Channel<Boolean>(Channel.BUFFERED)
+    private val showUpdateChannel = Channel<Unit>(Channel.BUFFERED)
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -194,8 +223,6 @@ class MainActivity : AppCompatActivity() {
             window.isNavigationBarContrastEnforced = false
         }
         super.onCreate(savedInstanceState)
-
-        roomBackup = RoomBackup(this).database(appDatabase).enableLogDebug(true).maxFileCount(5)
 
         handleConfigFileIntent(intent)
         handleWgDeepLinkIntent(intent)
@@ -212,7 +239,7 @@ class MainActivity : AppCompatActivity() {
 
             LaunchedEffect(uiState.isAppLoaded) {
                 if (uiState.isAppLoaded) {
-                    uiState.locale.let { LocaleUtil.changeLocale(it) }
+                    viewModel.syncLocale()
                 }
             }
 
@@ -221,9 +248,15 @@ class MainActivity : AppCompatActivity() {
             var coldStartAutoUpdate by remember {
                 mutableStateOf(intent?.getBooleanExtra(EXTRA_AUTO_UPDATE, false) == true)
             }
+            var coldStartShowUpdate by remember {
+                mutableStateOf(intent?.getBooleanExtra(EXTRA_SHOW_UPDATE, false) == true)
+            }
             var vpnPermissionDenied by remember { mutableStateOf(false) }
             var requestingTunnelMode by remember {
                 mutableStateOf<Pair<TunnelMode?, TunnelConfig?>>(Pair(null, null))
+            }
+            var pendingNotificationAction by remember {
+                mutableStateOf<NotificationPendingAction?>(null)
             }
             var showLocalNetworkRationale by remember { mutableStateOf(false) }
             var hasPromptedLocalNetwork by rememberSaveable { mutableStateOf(false) }
@@ -291,7 +324,12 @@ class MainActivity : AppCompatActivity() {
             val startingStack = buildList {
                 add(Route.Tunnels)
                 if (intent?.action == Intent.ACTION_APPLICATION_PREFERENCES) add(Route.Settings)
-                if (intent?.getBooleanExtra(EXTRA_OPEN_SUPPORT, false) == true) add(Route.Support)
+                if (
+                    intent?.getBooleanExtra(EXTRA_OPEN_SUPPORT, false) == true ||
+                        intent?.getBooleanExtra(EXTRA_SHOW_UPDATE, false) == true
+                ) {
+                    add(Route.Support)
+                }
                 if (uiState.pinLockEnabled) add(Route.Lock)
             }
 
@@ -327,11 +365,39 @@ class MainActivity : AppCompatActivity() {
                     },
                 )
 
+            val notificationPermissionLauncher =
+                rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+                    when (val action = pendingNotificationAction) {
+                        is NotificationPendingAction.StartTunnel ->
+                            viewModel.startTunnel(action.config)
+                        NotificationPendingAction.ToggleAutoTunnel -> viewModel.toggleAutoTunnel()
+                        null -> Unit
+                    }
+                    pendingNotificationAction = null
+                }
+
             LaunchedEffect(uiState.isAppLoaded, coldStartAutoUpdate) {
                 if (!uiState.isAppLoaded || !coldStartAutoUpdate) return@LaunchedEffect
                 coldStartAutoUpdate = false
                 notificationService.remove(UPDATE_AVAILABLE_NOTIFICATION_ID)
                 viewModel.requestSupportAutoUpdate(startDownload = true)
+            }
+
+            LaunchedEffect(uiState.isAppLoaded, coldStartShowUpdate) {
+                if (!uiState.isAppLoaded || !coldStartShowUpdate) return@LaunchedEffect
+                coldStartShowUpdate = false
+                // Kept across recreation otherwise, which would scroll again on rotation
+                intent?.removeExtra(EXTRA_SHOW_UPDATE)
+                viewModel.requestShowUpdateStatus()
+            }
+
+            LaunchedEffect(Unit) {
+                for (unit in showUpdateChannel) {
+                    if (previousRoute !is Route.Support) {
+                        navController.push(Route.Support)
+                    }
+                    viewModel.requestShowUpdateStatus()
+                }
             }
 
             LaunchedEffect(Unit) {
@@ -347,12 +413,17 @@ class MainActivity : AppCompatActivity() {
             LaunchedEffect(Unit) {
                 viewModel.globalSideEffect.collectLatest { sideEffect ->
                     when (sideEffect) {
-                        GlobalSideEffect.ConfigChanged -> restartApp()
                         GlobalSideEffect.PopBackStack -> navController.pop()
                         is GlobalSideEffect.RequestVpnPermission -> {
                             requestingTunnelMode =
                                 Pair(sideEffect.requestingMode, sideEffect.config)
                             vpnActivity.launch(VpnService.prepare(this@MainActivity))
+                        }
+                        is GlobalSideEffect.RequestNotificationPermission -> {
+                            pendingNotificationAction = sideEffect.pendingAction
+                            notificationPermissionLauncher.launch(
+                                Manifest.permission.POST_NOTIFICATIONS
+                            )
                         }
                         is GlobalSideEffect.Snackbar -> snackbarChannel.send(sideEffect)
                         is GlobalSideEffect.LaunchUrl -> context.openWebUrl(sideEffect.url)
@@ -464,6 +535,18 @@ class MainActivity : AppCompatActivity() {
                                             navController.push(Route.Donate)
                                         },
                                     ),
+                            )
+                        }
+                    }
+
+                    LaunchedEffect(Unit) {
+                        if (!uiState.isDesktopPromptShown) {
+                            viewModel.setDesktopPromptShown(true)
+                            toaster.show(
+                                message = context.getString(R.string.desktop_prompt_message),
+                                icon = Icons.Outlined.Celebration,
+                                type = ToastType.Normal,
+                                duration = 10_000L.milliseconds,
                             )
                         }
                     }
@@ -591,7 +674,6 @@ class MainActivity : AppCompatActivity() {
                                                     PinLockScreen()
                                                 }
                                                 entry<Route.Tunnels> { TunnelsScreen() }
-                                                entry<Route.Sort> { SortScreen() }
                                                 entry<Route.TunnelSettings> { key ->
                                                     val viewModel: TunnelViewModel =
                                                         koinViewModel(
@@ -656,6 +738,13 @@ class MainActivity : AppCompatActivity() {
                                                         )
                                                     IPv6Screen(viewModel)
                                                 }
+                                                entry<Route.EntryTunnel> { key ->
+                                                    val viewModel: TunnelViewModel =
+                                                        koinViewModel(
+                                                            parameters = { parametersOf(key.id) }
+                                                        )
+                                                    EntryTunnelScreen(viewModel)
+                                                }
                                                 entry<Route.LockdownSettings> {
                                                     LockdownSettingsScreen()
                                                 }
@@ -663,6 +752,7 @@ class MainActivity : AppCompatActivity() {
                                                 entry<Route.Appearance> { AppearanceScreen() }
                                                 entry<Route.Language> { LanguageScreen() }
                                                 entry<Route.Display> { DisplayScreen() }
+                                                entry<Route.Notifications> { NotificationsScreen() }
                                                 entry<Route.Logs> { LogsScreen() }
                                                 entry<Route.Support> { SupportScreen() }
                                                 entry<Route.License> { LicenseScreen() }
@@ -674,6 +764,9 @@ class MainActivity : AppCompatActivity() {
                                                 entry<Route.TunnelGlobals> { TunnelGlobalsScreen() }
                                                 entry<Route.Security> { SecurityScreen() }
                                                 entry<Route.Monitoring> { MonitoringScreen() }
+                                                entry<Route.TunnelRecovery> {
+                                                    TunnelRecoveryScreen()
+                                                }
                                             },
                                     )
                                 }
@@ -725,19 +818,22 @@ class MainActivity : AppCompatActivity() {
                                 },
                                 iconSlot = { toast ->
                                     val (icon, color) =
-                                        when (toast.type) {
-                                            ToastType.Success ->
-                                                Icons.Outlined.CheckCircleOutline to SilverTree
-                                            ToastType.Error ->
-                                                Icons.Outlined.ErrorOutline to AlertRed
-                                            ToastType.Warning ->
-                                                Icons.Outlined.WarningAmber to Straw
-                                            ToastType.Info ->
-                                                Icons.Outlined.Info to
-                                                    MaterialTheme.colorScheme.onSurface
-                                            ToastType.Normal ->
-                                                Icons.Outlined.FavoriteBorder to Heart
+                                        (toast.icon as? ImageVector)?.let {
+                                            it to MaterialTheme.colorScheme.primary
                                         }
+                                            ?: when (toast.type) {
+                                                ToastType.Success ->
+                                                    Icons.Outlined.CheckCircleOutline to SilverTree
+                                                ToastType.Error ->
+                                                    Icons.Outlined.ErrorOutline to AlertRed
+                                                ToastType.Warning ->
+                                                    Icons.Outlined.WarningAmber to Straw
+                                                ToastType.Info ->
+                                                    Icons.Outlined.Info to
+                                                        MaterialTheme.colorScheme.onSurface
+                                                ToastType.Normal ->
+                                                    Icons.Outlined.FavoriteBorder to Heart
+                                            }
                                     Icon(
                                         imageVector = icon,
                                         contentDescription = null,
@@ -747,7 +843,13 @@ class MainActivity : AppCompatActivity() {
                                 },
                                 contentColor = { MaterialTheme.colorScheme.onSurface },
                                 shape = { RoundedCornerShape(16.dp) },
-                                showCloseButton = true,
+                                closeButton = { toast ->
+                                    ToastCloseButton(
+                                        onClick = { toaster.dismiss(toast) },
+                                        modifier = Modifier.align(Alignment.TopEnd),
+                                        offset = DpOffset(8.dp, (-8).dp),
+                                    )
+                                },
                             )
                         }
                     }
@@ -771,80 +873,80 @@ class MainActivity : AppCompatActivity() {
         networkMonitor.checkPermissionsAndUpdateState()
     }
 
-    fun performBackup(encrypt: Boolean = false, password: String? = null) {
-        roomBackup
-            .backupLocation(RoomBackup.BACKUP_FILE_LOCATION_CUSTOM_DIALOG)
-            .apply {
-                if (encrypt && !password.isNullOrBlank()) {
-                    backupIsEncrypted(true)
-                    customEncryptPassword(password)
-                }
+    fun beginBackup(password: String?) {
+        pendingBackupPassword = password
+        if (isRunningOnTv()) {
+            lifecycleScope.launch {
+                showBackupResult(databaseBackup.backupTo(uri = null, password))
             }
-            .onCompleteListener { success, _, _ ->
-                lifecycleScope.launch {
-                    val sideEffect =
-                        if (success) {
-                            GlobalSideEffect.Snackbar(
-                                StringValue.StringResource(R.string.backup_success),
-                                ToastType.Success,
-                            )
-                        } else {
-                            GlobalSideEffect.Snackbar(
-                                StringValue.StringResource(R.string.backup_failed),
-                                ToastType.Error,
-                            )
-                        }
-                    viewModel.postSideEffect(sideEffect)
-                }
-            }
-            .backup()
+        } else {
+            createBackupLauncher.launch(databaseBackup.newBackupFileName())
+        }
     }
 
-    fun performRestore(encrypt: Boolean = false, password: String? = null) {
-        roomBackup
-            .backupLocation(RoomBackup.BACKUP_FILE_LOCATION_CUSTOM_DIALOG)
-            .apply {
-                if (encrypt && !password.isNullOrBlank()) {
-                    backupIsEncrypted(true)
-                    customEncryptPassword(password)
-                }
+    fun beginRestore(password: String?) {
+        pendingBackupPassword = password
+        openBackupLauncher.launch(
+            arrayOf(
+                FileUtils.ZIP_FILE_MIME_TYPE,
+                FileUtils.OCTET_STREAM_MIME_TYPE,
+                "application/vnd.sqlite3",
+                FileUtils.ALL_FILE_TYPES,
+            )
+        )
+    }
+
+    fun restoreFromUri(uri: Uri, password: String?) {
+        lifecycleScope.launch { finishRestore(databaseBackup.restore(uri, password)) }
+    }
+
+    private suspend fun finishRestore(result: RestoreResult) {
+        if (result == RestoreResult.Success) {
+            restartProcess()
+        } else {
+            showRestoreResult(result)
+        }
+    }
+
+    private suspend fun showBackupResult(result: BackupWriteResult) {
+        val message =
+            when (result) {
+                BackupWriteResult.Success ->
+                    StringValue.StringResource(R.string.backup_success) to ToastType.Success
+                is BackupWriteResult.SavedToDownloads ->
+                    StringValue.StringResource(R.string.backup_saved_downloads, result.fileName) to
+                        ToastType.Success
+                BackupWriteResult.Failed ->
+                    StringValue.StringResource(R.string.backup_failed) to ToastType.Error
             }
-            .onCompleteListener { success, message, exitCode ->
-                lifecycleScope.launch {
-                    if (success) {
-                        viewModel.postSideEffect(
-                            GlobalSideEffect.Snackbar(
-                                StringValue.StringResource(R.string.restore_success),
-                                ToastType.Success,
-                            )
-                        )
-                        roomBackup.restartApp(Intent(this@MainActivity, MainActivity::class.java))
-                    } else {
-                        Timber.w("Restore failed, exitCode=$exitCode, message=$message")
+        viewModel.postSideEffect(GlobalSideEffect.Snackbar(message.first, message.second))
+    }
 
-                        val errorMessage =
-                            when (exitCode) {
-                                EXIT_CODE_ERROR_WRONG_DECRYPTION_PASSWORD ->
-                                    getString(R.string.restore_failed_wrong_password)
-
-                                EXIT_CODE_ERROR,
-                                EXIT_CODE_ERROR_DECRYPTION_ERROR,
-                                EXIT_CODE_ERROR_RESTORE_BACKUP_IS_ENCRYPTED ->
-                                    getString(R.string.restore_failed_invalid_file)
-
-                                else -> getString(R.string.restore_failed)
-                            }
-
-                        viewModel.postSideEffect(
-                            GlobalSideEffect.Snackbar(
-                                StringValue.DynamicString(errorMessage),
-                                ToastType.Error,
-                            )
-                        )
-                    }
-                }
+    private suspend fun showRestoreResult(result: RestoreResult) {
+        val message =
+            when (result) {
+                RestoreResult.WrongPassword -> R.string.restore_failed_wrong_password
+                RestoreResult.InvalidFile -> R.string.restore_failed_invalid_file
+                RestoreResult.NewerVersion -> R.string.restore_failed_newer_version
+                RestoreResult.Failed,
+                RestoreResult.Success -> R.string.restore_failed
             }
-            .restore()
+        viewModel.postSideEffect(
+            GlobalSideEffect.Snackbar(
+                StringValue.StringResource(message),
+                ToastType.Error,
+            )
+        )
+    }
+
+    private fun restartProcess() {
+        val intent =
+            Intent(this, MainActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            }
+        startActivity(intent)
+        finishAffinity()
+        exitProcess(0)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -856,6 +958,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun enqueueSupportDeepLink(intent: Intent?) {
+        if (intent?.getBooleanExtra(EXTRA_SHOW_UPDATE, false) == true) {
+            intent.removeExtra(EXTRA_SHOW_UPDATE)
+            showUpdateChannel.trySend(Unit)
+        }
         if (intent?.getBooleanExtra(EXTRA_OPEN_SUPPORT, false) != true) return
         val autoUpdate = intent.getBooleanExtra(EXTRA_AUTO_UPDATE, false)
         intent.removeExtra(EXTRA_OPEN_SUPPORT)

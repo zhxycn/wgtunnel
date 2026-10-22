@@ -35,12 +35,32 @@ class DataStoreAppStateRepository(
         dataStoreManager.saveToDataStore(DataStoreManager.batteryDisableShown, shown)
     }
 
+    override suspend fun isNotificationPermissionRequested(): Boolean {
+        return dataStoreManager.getFromStore(DataStoreManager.notificationPermissionRequested)
+            ?: false
+    }
+
+    override suspend fun setNotificationPermissionRequested(requested: Boolean) {
+        dataStoreManager.saveToDataStore(
+            DataStoreManager.notificationPermissionRequested,
+            requested,
+        )
+    }
+
     override suspend fun setShouldShowDonationSnackbar(show: Boolean) {
         dataStoreManager.saveToDataStore(DataStoreManager.shouldShowDonationSnackbar, show)
     }
 
     override suspend fun shouldShowDonationSnackbar(): Boolean {
         return dataStoreManager.getFromStore(DataStoreManager.shouldShowDonationSnackbar) ?: false
+    }
+
+    override suspend fun isDesktopPromptShown(): Boolean {
+        return dataStoreManager.getFromStore(DataStoreManager.desktopPromptShown) ?: false
+    }
+
+    override suspend fun setDesktopPromptShown(shown: Boolean) {
+        dataStoreManager.saveToDataStore(DataStoreManager.desktopPromptShown, shown)
     }
 
     override suspend fun getLastActiveTunnelIds(): List<Int> {
@@ -74,8 +94,12 @@ class DataStoreAppStateRepository(
                                 pref[DataStoreManager.locationDisclosureShown] ?: false,
                             isBatteryOptimizationDisableShown =
                                 pref[DataStoreManager.batteryDisableShown] ?: false,
+                            isNotificationPermissionRequested =
+                                pref[DataStoreManager.notificationPermissionRequested] ?: false,
                             shouldShowDonationSnackbar =
                                 pref[DataStoreManager.shouldShowDonationSnackbar] ?: false,
+                            isDesktopPromptShown =
+                                pref[DataStoreManager.desktopPromptShown] ?: false,
                         )
                     } catch (e: IllegalArgumentException) {
                         Timber.e(e)

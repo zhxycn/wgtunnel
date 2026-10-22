@@ -51,6 +51,7 @@ import com.zaneschepke.wireguardautotunnel.ui.common.button.PreferenceTrailing
 import com.zaneschepke.wireguardautotunnel.ui.common.button.SurfaceRow
 import com.zaneschepke.wireguardautotunnel.ui.common.button.SwitchWithDivider
 import com.zaneschepke.wireguardautotunnel.ui.common.button.ThemedSwitch
+import com.zaneschepke.wireguardautotunnel.ui.common.functions.rememberFileImportLauncherForResult
 import com.zaneschepke.wireguardautotunnel.ui.common.label.GroupLabel
 import com.zaneschepke.wireguardautotunnel.ui.common.text.DescriptionText
 import com.zaneschepke.wireguardautotunnel.ui.navigation.Route
@@ -78,7 +79,6 @@ fun SettingsScreen(
 
     val locale = Locale.current.platformLocale
 
-    val globalUiState by sharedViewModel.collectAsState()
     val uiState by viewModel.collectAsState()
 
     if (uiState.isLoading) return
@@ -94,23 +94,32 @@ fun SettingsScreen(
     var showBackupSheet by rememberSaveable { mutableStateOf(false) }
     var showEncryptionDialog by rememberSaveable { mutableStateOf(false) }
     var isRestoreAction by remember { mutableStateOf(false) }
+    var pendingRestorePassword by remember { mutableStateOf<String?>(null) }
+    val launchTvRestore =
+        rememberFileImportLauncherForResult(
+            onNoFileExplorer = {
+                sharedViewModel.showSnackMessage(
+                    StringValue.StringResource(R.string.error_no_file_explorer),
+                    ToastType.Error,
+                )
+            },
+            onData = { uri ->
+                (context as? MainActivity)?.restoreFromUri(uri, pendingRestorePassword)
+                pendingRestorePassword = null
+            },
+            onCancel = {
+                pendingRestorePassword = null
+                sharedViewModel.showSnackMessage(
+                    StringValue.StringResource(R.string.restore_failed),
+                    ToastType.Error,
+                )
+            },
+        )
 
     var showAppModeSheet by rememberSaveable { mutableStateOf(false) }
 
     val appMode = uiState.settings.tunnelMode
     val dnsEnabled by rememberSaveable(appMode) { mutableStateOf(true) }
-
-    fun performBackupRestore(action: () -> Unit) {
-        showBackupSheet = false
-        if (uiState.tunnelActive || globalUiState.isAutoTunnelActive) {
-            sharedViewModel.showSnackMessage(
-                StringValue.StringResource(R.string.all_services_disabled),
-                ToastType.Warning,
-            )
-            return
-        }
-        action()
-    }
 
     if (showBackupSheet) {
         BackupBottomSheet(
@@ -131,17 +140,18 @@ fun SettingsScreen(
     if (showEncryptionDialog) {
         BackupEncryptionDialog(
             isRestore = isRestoreAction,
-            onConfirm = { encrypt, password ->
+            onConfirm = { _, password ->
                 showEncryptionDialog = false
-
+                val activity = context as? MainActivity ?: return@BackupEncryptionDialog
                 if (isRestoreAction) {
-                    performBackupRestore {
-                        (context as? MainActivity)?.performRestore(encrypt, password)
+                    if (isTv) {
+                        pendingRestorePassword = password
+                        launchTvRestore()
+                    } else {
+                        activity.beginRestore(password)
                     }
                 } else {
-                    performBackupRestore {
-                        (context as? MainActivity)?.performBackup(encrypt, password)
-                    }
+                    activity.beginBackup(password)
                 }
             },
             onDismiss = { showEncryptionDialog = false },
@@ -188,11 +198,7 @@ fun SettingsScreen(
                     }
                 },
                 title = stringResource(R.string.backend_mode),
-                description = {
-                    DescriptionText(
-                        stringResource(R.string.current_template, appMode.asTitleString(context))
-                    )
-                },
+                description = { DescriptionText(appMode.asTitleString(context)) },
                 onClick = {
                     when (appMode) {
                         TunnelMode.PROXY -> navController.push(Route.ProxySettings)
@@ -251,18 +257,8 @@ fun SettingsScreen(
             )
             SurfaceRow(
                 leading = { Icon(Icons.Outlined.Autorenew, contentDescription = null) },
-                title = stringResource(R.string.seamless_recovery),
-                trailing = { modifier ->
-                    ThemedSwitch(
-                        checked = uiState.settings.seamlessRecoveryEnabled,
-                        onClick = { viewModel.setSeamlessRecovery(enabled = it) },
-                        modifier = modifier,
-                    )
-                },
-                description = { DescriptionText(stringResource(R.string.seamless_recovery_desc)) },
-                onClick = {
-                    viewModel.setSeamlessRecovery(!uiState.settings.seamlessRecoveryEnabled)
-                },
+                title = stringResource(R.string.tunnel_recovery),
+                onClick = { navController.push(Route.TunnelRecovery) },
             )
             SurfaceRow(
                 leading = { Icon(Icons.Outlined.MonitorHeart, null) },

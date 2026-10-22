@@ -1,6 +1,7 @@
 package com.zaneschepke.wireguardautotunnel.domain.enums
 
 import android.content.Context
+import com.wgtunnel.backend.model.dns.DnsEndpointProtocol
 import com.zaneschepke.wireguardautotunnel.R
 
 enum class BootstrapDnsProtocol(val value: Int) {
@@ -17,6 +18,23 @@ enum class BootstrapDnsProtocol(val value: Int) {
             UDP -> context.getString(R.string.plain_dns)
         }
     }
+
+    fun asDescription(context: Context): String {
+        return when (this) {
+            SYSTEM -> context.getString(R.string.bootstrap_system_dns_desc)
+            DOH -> context.getString(R.string.doh_desc)
+            DOT -> context.getString(R.string.dot_desc)
+            UDP -> context.getString(R.string.plain_dns_desc)
+        }
+    }
+
+    fun toCore(): DnsEndpointProtocol =
+        when (this) {
+            SYSTEM -> DnsEndpointProtocol.SYSTEM
+            DOH -> DnsEndpointProtocol.DOH
+            DOT -> DnsEndpointProtocol.DOT
+            UDP -> DnsEndpointProtocol.UDP
+        }
 
     companion object {
         fun fromValue(value: Int): BootstrapDnsProtocol =

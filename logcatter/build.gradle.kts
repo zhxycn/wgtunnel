@@ -1,13 +1,11 @@
-plugins {
-    alias(libs.plugins.androidLibrary)
-}
+plugins { alias(libs.plugins.androidLibrary) }
 
 android {
     namespace = "com.zaneschepke.logcatter"
-    compileSdk = Constants.TARGET_SDK
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        minSdk = Constants.MIN_SDK
+        minSdk = libs.versions.minSdk.get().toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")

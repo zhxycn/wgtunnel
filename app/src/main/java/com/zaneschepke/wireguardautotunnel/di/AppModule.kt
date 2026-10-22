@@ -79,7 +79,7 @@ val appModule = module {
     single { NetworkUtils(get(named(Dispatcher.IO))) }
 
     viewModelOf(::AutoTunnelViewModel)
-    viewModel { (id: Int?) -> ConfigEditViewModel(get(), get(), get(), get(), get(), id) }
+    viewModel { (id: Int?) -> ConfigEditViewModel(get(), get(), get(), get(), get(), get(), id) }
     viewModelOf(::DnsViewModel)
     viewModelOf(::LockdownViewModel)
     viewModelOf(::LoggerViewModel)
@@ -87,9 +87,9 @@ val appModule = module {
     viewModelOf(::ProxySettingsViewModel)
     viewModelOf(::SettingsViewModel)
     viewModelOf(::SharedAppViewModel)
-    viewModel { (id: Int) -> SplitTunnelViewModel(get(), get(), get(), id) }
-    viewModel { SupportViewModel(get(), get()) }
-    viewModel { (id: Int) -> TunnelViewModel(get(), get(), id) }
+    viewModel { (id: Int) -> SplitTunnelViewModel(get(), get(), get(), get(), get(), id) }
+    viewModel { SupportViewModel(get(), get(), get()) }
+    viewModel { (id: Int) -> TunnelViewModel(get(), get(), get(), id) }
 
     singleOf(::AutoTunnelStateHolder)
 }

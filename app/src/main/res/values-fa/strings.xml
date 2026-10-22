@@ -15,8 +15,6 @@
     <string name="add_tunnels_text">از فایل یا زیپ اضافه کنید</string>
     <string name="add_from_qr">از کد QR اضافه کنید</string>
     <string name="tunnel_name">نام تونل</string>
-    <string name="exclude">مستثنی کردن</string>
-    <string name="include">شامل کردن</string>
     <string name="config_changes_saved">تغییرات پیکربندی ذخیره شد.</string>
     <string name="public_key">کلید عمومی </string>
     <string name="addresses">آدرس‌ها </string>
@@ -55,7 +53,6 @@
     <string name="delete_tunnel">حذف تونل </string>
     <string name="delete_tunnel_message">آیا مطمئن هستید که می‌خواهید تونل‌های انتخاب‌شده را حذف کنید؟ </string>
     <string name="yes">بله</string>
-    <string name="all">همه</string>
     <string name="no_email_detected">هیچ برنامه ایمیلی شناسایی نشد </string>
     <string name="no_browser_detected">هیچ مرورگری شناسایی نشد </string>
     <string name="open_issue">یک مسئله را باز کنید </string>
@@ -141,7 +138,6 @@
     <string name="camera_permission_required">مجوز دوربین لازم است </string>
     <string name="export_failed">صدور ناموفق بود</string>
     <string name="version_template">نسخه: %1$s </string>
-    <string name="current_template">فعلی: %1$s </string>
     <string name="flavor_template">مناسب (گونه): %1$s</string>
     <string name="root_required_template">%1$s (نیازمند روت)</string>
     <string name="recommended_template">%1$s (توصیه می‌شود) </string>
@@ -303,4 +299,8 @@
     <string name="tunnel_dns">تونل DNS</string>
     <string name="use_tunnel_dns_servers">از سرورهای DNS تونلی استفاده کنید</string>
     <string name="error_config_missing_dns">تونل %1$s فاقد سرورهای DNS مورد نیاز برای تنظیمات برنامه فعلی شما است.</string>
+    <string name="live_updates">به‌روزرسانی‌های زنده</string>
+    <string name="live_updates_desc">پیشرفت و وضعیت اتصال تونل فعال را در نوار وضعیت و صفحه قفل نمایش می‌دهد. فقط زمانی اعمال می‌شود که یک تونل در حال اجرا باشد</string>
+    <string name="notification_connection_manual">اتصال دستی</string>
+    <string name="notification_connection_auto">تونل خودرو </string>
 </resources>

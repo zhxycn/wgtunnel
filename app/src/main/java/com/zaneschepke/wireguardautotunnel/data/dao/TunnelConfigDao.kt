@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import androidx.room.Upsert
 import com.zaneschepke.wireguardautotunnel.data.entity.TunnelConfig
 import kotlinx.coroutines.flow.Flow
@@ -15,6 +16,8 @@ interface TunnelConfigDao {
     @Upsert suspend fun upsert(t: TunnelConfig)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun saveAll(t: List<TunnelConfig>)
+
+    @Update suspend fun updateAll(t: List<TunnelConfig>)
 
     @Query("UPDATE tunnel_config SET is_metered = :value WHERE id = :id")
     suspend fun setMetered(id: Int, value: Boolean)
@@ -32,6 +35,12 @@ interface TunnelConfigDao {
     @Delete suspend fun delete(t: TunnelConfig)
 
     @Delete suspend fun delete(t: List<TunnelConfig>)
+
+    @Query("UPDATE tunnel_config SET entry_tunnel_id = NULL WHERE entry_tunnel_id = :id")
+    suspend fun clearEntryRefsTo(id: Int)
+
+    @Query("UPDATE tunnel_config SET entry_tunnel_id = NULL WHERE entry_tunnel_id IN (:ids)")
+    suspend fun clearEntryRefsTo(ids: List<Int>)
 
     @Query("SELECT COUNT('id') FROM tunnel_config") suspend fun count(): Long
 

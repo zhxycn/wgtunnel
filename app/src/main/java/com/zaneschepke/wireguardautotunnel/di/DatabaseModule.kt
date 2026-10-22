@@ -7,6 +7,7 @@ import com.zaneschepke.wireguardautotunnel.R
 import com.zaneschepke.wireguardautotunnel.data.AppDatabase
 import com.zaneschepke.wireguardautotunnel.data.DataStoreManager
 import com.zaneschepke.wireguardautotunnel.data.DatabaseCallback
+import com.zaneschepke.wireguardautotunnel.data.backup.DatabaseBackup
 import com.zaneschepke.wireguardautotunnel.data.migrations.MIGRATION_23_24
 import com.zaneschepke.wireguardautotunnel.data.migrations.MIGRATION_25_26
 import com.zaneschepke.wireguardautotunnel.data.migrations.MIGRATION_28_29
@@ -18,6 +19,7 @@ import com.zaneschepke.wireguardautotunnel.data.repository.RoomLockdownSettingsR
 import com.zaneschepke.wireguardautotunnel.data.repository.RoomMonitoringSettingsRepository
 import com.zaneschepke.wireguardautotunnel.data.repository.RoomProxySettingsRepository
 import com.zaneschepke.wireguardautotunnel.data.repository.RoomSettingsRepository
+import com.zaneschepke.wireguardautotunnel.data.repository.RoomTunnelGroupRepository
 import com.zaneschepke.wireguardautotunnel.data.repository.RoomTunnelRepository
 import com.zaneschepke.wireguardautotunnel.domain.repository.AppStateRepository
 import com.zaneschepke.wireguardautotunnel.domain.repository.AutoTunnelSettingsRepository
@@ -27,6 +29,7 @@ import com.zaneschepke.wireguardautotunnel.domain.repository.InstalledPackageRep
 import com.zaneschepke.wireguardautotunnel.domain.repository.LockdownSettingsRepository
 import com.zaneschepke.wireguardautotunnel.domain.repository.MonitoringSettingsRepository
 import com.zaneschepke.wireguardautotunnel.domain.repository.ProxySettingsRepository
+import com.zaneschepke.wireguardautotunnel.domain.repository.TunnelGroupRepository
 import com.zaneschepke.wireguardautotunnel.domain.repository.TunnelRepository
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -35,6 +38,7 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import org.koin.dsl.onClose
 import org.koin.viewmodel.scope.viewModelScope
 
 @OptIn(KoinExperimentalAPI::class, KoinViewModelScopeApi::class)
@@ -64,6 +68,7 @@ val databaseModule = module {
     single { get<AppDatabase>().monitoringSettingsDao() }
     single { get<AppDatabase>().proxySettingsDoa() }
     single { get<AppDatabase>().tunnelConfigDoa() }
+    single { get<AppDatabase>().tunnelGroupDao() }
 
     single { DataStoreManager(androidContext(), get(named(Dispatcher.IO))) }
 
@@ -77,13 +82,21 @@ val databaseModule = module {
     singleOf(::RoomProxySettingsRepository) bind ProxySettingsRepository::class
     singleOf(::RoomSettingsRepository) bind GeneralSettingRepository::class
     singleOf(::RoomTunnelRepository) bind TunnelRepository::class
+    singleOf(::RoomTunnelGroupRepository) bind TunnelGroupRepository::class
+    single {
+        DatabaseBackup(
+            androidContext(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(named(Dispatcher.IO)),
+        )
+    }
     viewModelScope {
         scoped<InstalledPackageRepository> {
-            InstalledAndroidPackageRepository(
-                androidContext(),
-                get(named(Dispatcher.IO)),
-                get(named(Scope.APPLICATION)),
-            )
-        }
+            InstalledAndroidPackageRepository(androidContext(), get(named(Dispatcher.IO)))
+        } onClose { (it as? AutoCloseable)?.close() }
     }
 }

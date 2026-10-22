@@ -17,6 +17,7 @@ data class ConfigUiState(
 
     // persisted settings
     val globalSettings: GlobalSettingsState = GlobalSettingsState(),
+    val globalInterface: EditableInterface? = null,
 
     // ui
     val ui: ConfigEditUiState = ConfigEditUiState(),
@@ -55,7 +56,6 @@ data class ConfigEditUiState(
     val showAmneziaValues: Boolean = false,
     val isInterfaceDropdownExpanded: Boolean = false,
     val isPeerDropdownExpanded: Boolean = false,
-    val showSaveModal: Boolean = false,
     val selectedCopySourceTunnelId: Int? = null,
 )
 

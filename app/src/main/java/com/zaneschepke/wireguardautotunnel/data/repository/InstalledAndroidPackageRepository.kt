@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
@@ -14,6 +15,8 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,8 +34,10 @@ import timber.log.Timber
 class InstalledAndroidPackageRepository(
     private val context: Context,
     private val ioDispatcher: CoroutineDispatcher,
-    private val applicationScope: CoroutineScope,
-) : InstalledPackageRepository {
+) : InstalledPackageRepository, AutoCloseable {
+
+    // scoped to this instance so the receiver and cache are released with the owning scope
+    private val repositoryScope = CoroutineScope(SupervisorJob() + ioDispatcher)
 
     private val _installedPackages = MutableStateFlow<List<InstalledPackage>>(emptyList())
     override val installedPackages: StateFlow<List<InstalledPackage>> =
@@ -40,7 +45,7 @@ class InstalledAndroidPackageRepository(
 
     init {
         // warm the cache
-        applicationScope.launch(ioDispatcher) { refreshInstalledPackages() }
+        repositoryScope.launch { refreshInstalledPackages() }
 
         // watch for packages changes and update the cache
         callbackFlow {
@@ -74,7 +79,11 @@ class InstalledAndroidPackageRepository(
                 refreshInstalledPackages()
             }
             .flowOn(ioDispatcher)
-            .launchIn(applicationScope)
+            .launchIn(repositoryScope)
+    }
+
+    override fun close() {
+        repositoryScope.cancel()
     }
 
     override suspend fun getInstalledPackages(): List<InstalledPackage> =
@@ -107,6 +116,7 @@ class InstalledAndroidPackageRepository(
                             ),
                         packageName = packageInfo.packageName,
                         uId = appInfo.uid,
+                        isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0,
                     )
                 } catch (e: PackageManager.NameNotFoundException) {
                     Timber.e(e)

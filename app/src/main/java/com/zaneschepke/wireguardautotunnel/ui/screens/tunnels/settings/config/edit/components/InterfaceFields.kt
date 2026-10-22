@@ -36,11 +36,21 @@ fun InterfaceFields(
             )
         }
 
+        val managedDns =
+            if (!uiState.isGlobalConfig && uiState.globalSettings.dnsEnabled)
+                uiState.globalInterface?.dnsServers
+            else null
+        val managedAmnezia =
+            if (!uiState.isGlobalConfig && uiState.globalSettings.amneziaEnabled)
+                uiState.globalInterface
+            else null
+
         DnsMtuSection(
             isGlobalConfig = uiState.isGlobalConfig,
             globalDnsEnabled = uiState.globalSettings.dnsEnabled,
             interfaceState = uiState.draft.config.`interface`,
             onInterfaceChange = onInterfaceChange,
+            globalDnsServers = managedDns,
         )
 
         if (uiState.ui.showScripts) {
@@ -48,10 +58,14 @@ fun InterfaceFields(
         }
 
         if (
-            (!uiState.isGlobalConfig && uiState.ui.showAmneziaValues) ||
+            (!uiState.isGlobalConfig && (uiState.ui.showAmneziaValues || managedAmnezia != null)) ||
                 (uiState.isGlobalConfig && uiState.globalSettings.amneziaEnabled)
         ) {
-            AmneziaSection(uiState.draft.config.`interface`, onInterfaceChange)
+            AmneziaSection(
+                uiState.draft.config.`interface`,
+                onInterfaceChange,
+                globalValues = managedAmnezia,
+            )
         }
     }
 }

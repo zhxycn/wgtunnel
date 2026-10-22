@@ -38,7 +38,7 @@ class FileUtils(private val context: Context, private val ioDispatcher: Coroutin
      */
     suspend fun createFile(fileName: String, data: String): File? =
         withContext(ioDispatcher) {
-            val file = File(context.cacheDir, "${fileName}.conf")
+            val file = File(context.cacheDir, "${sanitizeFileName(fileName)}.conf")
             file.outputStream().use { it.write(data.toByteArray()) }
             Timber.d("Created file: ${file.path}, size: ${file.length()} bytes")
 
@@ -101,7 +101,7 @@ class FileUtils(private val context: Context, private val ioDispatcher: Coroutin
                 if (!sharePath.exists() && !sharePath.mkdirs()) {
                     throw IOException("Failed to create share directory: ${sharePath.path}")
                 }
-                val file = File(sharePath, name)
+                val file = File(sharePath, sanitizeFileName(name))
                 if (file.exists() && !file.delete()) {
                     throw IOException("Failed to delete existing file: ${file.path}")
                 }
@@ -198,6 +198,15 @@ class FileUtils(private val context: Context, private val ioDispatcher: Coroutin
             }
         }
 
+    /**
+     * Strips characters that are illegal in a file name on Android (like /) Falls back to a generic
+     * name if nothing is left.
+     */
+    private fun sanitizeFileName(name: String): String {
+        val cleaned = name.replace(ILLEGAL_FILENAME_CHARS, "_").trim(' ', '.')
+        return cleaned.ifBlank { "tunnel" }
+    }
+
     private fun getDisplayNameColumnIndex(cursor: Cursor): Int? {
         val columnIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
         if (columnIndex == -1) return null
@@ -246,7 +255,7 @@ class FileUtils(private val context: Context, private val ioDispatcher: Coroutin
     suspend fun readConfigsFromUri(uri: Uri): Result<Map<QuickConfig, TunnelName>> =
         withContext(ioDispatcher) {
             runCatching {
-                val fileName = getFileName(uri).lowercase()
+                val fileName = getFileName(uri)
                 val extension = getFileExtensionFromFileName(fileName)
                 val inputStream =
                     context.getInputStreamFromUri(uri)
@@ -316,10 +325,14 @@ class FileUtils(private val context: Context, private val ioDispatcher: Coroutin
         const val ZIP_FILE_EXTENSION = ".zip"
         const val TEXT_MIME_TYPE = "text/plain"
         const val ZIP_FILE_MIME_TYPE = "application/zip"
+        const val OCTET_STREAM_MIME_TYPE = "application/octet-stream"
         const val ALL_FILE_TYPES = "*/*"
+        val TV_IMPORT_MIME_TYPES =
+            arrayOf(TEXT_MIME_TYPE, ZIP_FILE_MIME_TYPE, OCTET_STREAM_MIME_TYPE)
 
-        const val ALLOWED_TV_FILE_TYPES = "${TEXT_MIME_TYPE}|${ZIP_FILE_MIME_TYPE}"
         const val GOOGLE_TV_EXPLORER_STUB = "com.google.android.tv.frameworkpackagestubs"
         const val ANDROID_TV_EXPLORER_STUB = "com.android.tv.frameworkpackagestubs"
+
+        private val ILLEGAL_FILENAME_CHARS = Regex("[/\\\\:*?\"<>|]")
     }
 }

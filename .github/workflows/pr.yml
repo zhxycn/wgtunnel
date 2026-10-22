@@ -14,17 +14,25 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Verify Gradle Wrapper
-        uses: gradle/actions/wrapper-validation@v6.3.0
+        uses: gradle/actions/wrapper-validation@v6.4.0
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v5
+      - name: Read JDK version
+        id: jdk
+        run: |
+          JDK_VERSION=$(sed -nE 's/^jdk[[:space:]]*=[[:space:]]*"([0-9]+)".*/\1/p' gradle/libs.versions.toml)
+          echo "version=$JDK_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Set up JDK
+        uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: ${{ steps.jdk.outputs.version }}
           cache: gradle
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Run ktfmt
-        run: ./gradlew ktfmtCheck
+      - name: Check formatting
+        run: |
+          ./gradlew formatCheck
+          echo "Working tree matches ./gradlew format."
