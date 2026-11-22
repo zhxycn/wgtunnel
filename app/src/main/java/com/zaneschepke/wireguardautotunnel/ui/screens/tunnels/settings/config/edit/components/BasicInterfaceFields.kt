@@ -61,9 +61,9 @@ fun BasicInterfaceFields(
                                     interfaceState.copy(
                                         privateKey = privateKey.toBase64(),
                                         publicKey = publicKey.toBase64(),
-                                    )
+                                    ),
                                 )
-                            }
+                            },
                         ) {
                             Icon(
                                 Icons.Rounded.Refresh,
@@ -91,7 +91,7 @@ fun BasicInterfaceFields(
             singleLine = true,
             trailing = {
                 IconButton(
-                    onClick = { clipboardManager.copy(interfaceState.publicKey) }
+                    onClick = { clipboardManager.copy(interfaceState.publicKey) },
                 ) { // reuse your clipboard helper
                     Icon(Icons.Rounded.ContentCopy, stringResource(R.string.copy_public_key))
                 }

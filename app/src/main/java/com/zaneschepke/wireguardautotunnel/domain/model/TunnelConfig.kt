@@ -60,6 +60,9 @@ data class TunnelConfig(
         override val isMetered: Boolean
             get() = config.isMetered
 
+        override val strictSplitTunnel: Boolean
+            get() = generalSettings.strictSplitTunnelEnabled
+
         override val ipStrategy: Tunnel.IpStrategy
             get() =
                 if (config.isIpv6Preferred)
@@ -71,8 +74,8 @@ data class TunnelConfig(
                 if (monitoringSettings.tunnelStatisticsEnabled) {
                     add(
                         Tunnel.Feature.ActiveConfigMonitor(
-                            monitoringSettings.tunnelStatisticsPollInterval
-                        )
+                            monitoringSettings.tunnelStatisticsPollInterval,
+                        ),
                     )
                 }
                 add(
@@ -82,7 +85,7 @@ data class TunnelConfig(
                         ipv4Fallback = config.isIpv6Preferred,
                         ipv6Recovery = config.ipv6RestoreEnabled,
                         bounceDelaySeconds = generalSettings.seamlessRecoveryBounceDelaySec,
-                    )
+                    ),
                 )
             }
 
@@ -100,7 +103,7 @@ data class TunnelConfig(
 
         fun generateDefaultGlobalConfig(): TunnelConfig {
             val privateKey: String = Key.generatePrivateKey().toBase64()
-            val publicKey = Config.generatePublicKeyFromPrivateKey(privateKey)
+            val publicKey: String = Key.generatePrivateKey().toBase64()
             val config =
                 Config(
                     `interface` =
@@ -111,7 +114,7 @@ data class TunnelConfig(
                                 publicKey = publicKey,
                                 endpoint = "server.example.com:51820",
                                 allowedIPs = "0.0.0.0/0",
-                            )
+                            ),
                         ),
                 )
             return TunnelConfig(name = GLOBAL_CONFIG_NAME, quickConfig = config.asQuickString())
