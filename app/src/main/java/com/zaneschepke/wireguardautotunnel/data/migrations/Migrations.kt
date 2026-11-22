@@ -464,3 +464,30 @@ val MIGRATION_28_29 =
             )
         }
     }
+
+val MIGRATION_42_43 =
+    object : Migration(42, 43) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            val tunnelConfigColumns =
+                database.query("PRAGMA table_info(`tunnel_config`)").use { cursor ->
+                    val name = cursor.getColumnIndex("name")
+                    buildList { while (cursor.moveToNext()) add(cursor.getString(name)) }
+                }
+            if ("auto_address_prefixes" !in tunnelConfigColumns) {
+                database.execSQL(
+                    "ALTER TABLE `tunnel_config` ADD COLUMN `auto_address_prefixes` TEXT NOT NULL DEFAULT ''",
+                )
+            }
+
+            val generalSettingsColumns =
+                database.query("PRAGMA table_info(`general_settings`)").use { cursor ->
+                    val name = cursor.getColumnIndex("name")
+                    buildList { while (cursor.moveToNext()) add(cursor.getString(name)) }
+                }
+            if ("strict_split_tunnel_enabled" !in generalSettingsColumns) {
+                database.execSQL(
+                    "ALTER TABLE `general_settings` ADD COLUMN `strict_split_tunnel_enabled` INTEGER NOT NULL DEFAULT 0",
+                )
+            }
+        }
+    }
